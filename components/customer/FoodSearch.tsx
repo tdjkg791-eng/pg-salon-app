@@ -63,11 +63,11 @@ export default function FoodSearch({ onSelect, bodyType }: Props) {
     return Array.isArray(ngList) && ngList.includes(bodyType);
   };
 
-  const renderItem = (food: any, opts?: { aiSuggested?: boolean }) => (
+  const renderItem = (food: any, opts?: { suggested?: boolean }) => (
     <li
-      key={`${opts?.aiSuggested ? "ai-" : ""}${food.id}`}
+      key={`${opts?.suggested ? "s-" : ""}${food.id}`}
       onClick={() => onSelect(food)}
-      className="mx-3 mb-1.5 flex cursor-pointer items-center justify-between rounded-[10px] border border-[#E8E6DF] bg-white px-3 py-2.5"
+      className="mb-1.5 flex cursor-pointer items-center justify-between rounded-[10px] border border-[#E8E6DF] bg-white px-3 py-2.5"
     >
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13px] font-medium">{food.name}</div>
@@ -77,11 +77,6 @@ export default function FoodSearch({ onSelect, bodyType }: Props) {
         </div>
       </div>
       <div className="ml-2 flex shrink-0 items-center gap-1">
-        {opts?.aiSuggested && (
-          <span className="rounded-full bg-purple-100 px-1.5 py-0.5 text-[9px] font-semibold text-purple-700">
-            AI
-          </span>
-        )}
         <StatusBadge status={statusOf(food)} />
         {isBodyNg(food) && <BodyTypeBadge />}
       </div>
@@ -108,26 +103,23 @@ export default function FoodSearch({ onSelect, bodyType }: Props) {
         <div className="mx-3 text-xs text-[#888]">結果がありません</div>
       )}
 
-      {hasSuggestions && (
-        <>
-          <div className="mx-3 mt-1 flex items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-purple-700">
-              もしかして？
-            </span>
-            <span className="text-[10px] text-[#888]">
-              AIが関連食品を提案しました
-            </span>
-          </div>
-          <ul>{suggestions.map((f) => renderItem(f, { aiSuggested: true }))}</ul>
-          {hasResults && (
-            <div className="mx-3 mt-2 text-[11px] font-semibold text-[#666]">
-              検索結果
-            </div>
-          )}
-        </>
+      {hasResults && (
+        <ul className="mx-3">{results.map((f) => renderItem(f))}</ul>
       )}
 
-      <ul>{results.map((f) => renderItem(f))}</ul>
+      {hasSuggestions && (
+        <div className="mx-3 mt-2 rounded-[12px] bg-[#F2F1EB] px-2.5 pb-2 pt-2.5">
+          <div className="mb-1.5 flex items-center gap-1.5 px-1">
+            <span className="text-[11px] font-semibold text-[#555]">
+              もしかして？
+            </span>
+            <span className="text-[10px] text-[#888]">関連する食品</span>
+          </div>
+          <ul>
+            {suggestions.map((f) => renderItem(f, { suggested: true }))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

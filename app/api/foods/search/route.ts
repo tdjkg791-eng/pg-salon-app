@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { getSynonyms, getCategoryHint } from '@/lib/utils/food-synonyms';
 
 export const dynamic = 'force-dynamic';
 
-const AI_FALLBACK_THRESHOLD = 3;
-const CLAUDE_MODEL = 'claude-sonnet-4-5-20250929';
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
+const MIN_DIRECT_HITS = 3;
+const MAX_SUGGESTIONS = 15;
 
 type Food = Record<string, any>;
+type Supa = ReturnType<typeof createServerClient>;
 
 function sanitizePattern(q: string): string {
   return q.replace(/[%,]/g, ' ').trim();
 }
 
-async function searchFoods(
-  supabase: ReturnType<typeof createServerClient>,
+async function searchByKeyword(
+  supabase: Supa,
   keyword: string,
   category: string | null,
   limit: number
@@ -37,54 +38,19 @@ async function searchFoods(
   return data ?? [];
 }
 
-async function expandKeywordWithClaude(keyword: string): Promise<string[]> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.warn('[foods/search] ANTHROPIC_API_KEY not set, skipping AI fallback');
-    return [];
-  }
-
-  const prompt = `ユーザーが食品検索で「${keyword}」と入力しました。
-これに該当する具体的な食品名を5〜10個、JSON配列で返してください。
-日本食品標準成分表に載っている一般的な食品名を使ってください。
-返答例: ["たら", "ひらめ", "すずき", "たい", "かれい"]
-
-JSONのみを返してください。説明は不要。`;
-
-  try {
-    const res = await fetch(CLAUDE_API_URL, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: CLAUDE_MODEL,
-        max_tokens: 500,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-
-    if (!res.ok) {
-      console.error('[foods/search] Claude API error', res.status, await res.text());
-      return [];
-    }
-
-    const json = (await res.json()) as { content?: Array<{ type: string; text?: string }> };
-    const text = json.content?.find((c) => c.type === 'text')?.text ?? '';
-
-    // Extract JSON array from response (may be wrapped in prose or code fence)
-    const match = text.match(/\[[\s\S]*?\]/);
-    if (!match) return [];
-
-    const parsed = JSON.parse(match[0]);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((s): s is string => typeof s === 'string' && s.trim().length > 0).slice(0, 10);
-  } catch (err) {
-    console.error('[foods/search] Claude fetch failed', err);
-    return [];
-  }
+async function searchByCategory(
+  supabase: Supa,
+  category: string,
+  limit: number
+): Promise<Food[]> {
+  const { data, error } = await supabase
+    .from('foods')
+    .select('*')
+    .eq('category', category)
+    .order('pg_status', { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
@@ -106,40 +72,66 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   try {
     const supabase = createServerClient();
-    const foods = await searchFoods(supabase, q, category, limit);
 
-    // AI fallback: < 3 results → expand keyword via Claude and re-search
-    let suggestions: Food[] = [];
-    let expandedKeywords: string[] = [];
-    if (foods.length < AI_FALLBACK_THRESHOLD) {
-      expandedKeywords = await expandKeywordWithClaude(q);
+    // Stage 1: direct substring match
+    const foods = await searchByKeyword(supabase, q, category, limit);
 
-      if (expandedKeywords.length > 0) {
-        const seenIds = new Set(foods.map((f) => f.id));
-        const collected: Food[] = [];
+    // If we already have enough results, return early
+    if (foods.length >= MIN_DIRECT_HITS) {
+      return NextResponse.json({ foods, suggestions: [], expanded_from: null });
+    }
 
-        for (const kw of expandedKeywords) {
-          if (collected.length >= 15) break;
-          try {
-            const rows = await searchFoods(supabase, kw, category, 5);
-            for (const row of rows) {
-              if (seenIds.has(row.id)) continue;
-              seenIds.add(row.id);
-              collected.push(row);
-              if (collected.length >= 15) break;
-            }
-          } catch (e) {
-            console.error('[foods/search] expanded lookup failed', kw, e);
+    const seenIds = new Set(foods.map((f) => f.id));
+    const suggestions: Food[] = [];
+    let expandedKeyword: string | null = null;
+    let expandedSource: 'synonym' | 'category' | null = null;
+
+    // Stage 2: synonym expansion
+    const synonyms = getSynonyms(q);
+    if (synonyms.length > 0) {
+      expandedKeyword = q;
+      expandedSource = 'synonym';
+      for (const kw of synonyms) {
+        if (suggestions.length >= MAX_SUGGESTIONS) break;
+        try {
+          const rows = await searchByKeyword(supabase, kw, category, 5);
+          for (const row of rows) {
+            if (seenIds.has(row.id)) continue;
+            seenIds.add(row.id);
+            suggestions.push(row);
+            if (suggestions.length >= MAX_SUGGESTIONS) break;
           }
+        } catch (e) {
+          console.error('[foods/search] synonym lookup failed', kw, e);
         }
-        suggestions = collected;
+      }
+    }
+
+    // Stage 3: category fallback (only if still empty — both direct and synonym)
+    if (foods.length === 0 && suggestions.length === 0) {
+      const hint = getCategoryHint(q);
+      if (hint) {
+        expandedKeyword = q;
+        expandedSource = 'category';
+        try {
+          const rows = await searchByCategory(supabase, hint, MAX_SUGGESTIONS);
+          for (const row of rows) {
+            if (seenIds.has(row.id)) continue;
+            seenIds.add(row.id);
+            suggestions.push(row);
+          }
+        } catch (e) {
+          console.error('[foods/search] category lookup failed', hint, e);
+        }
       }
     }
 
     return NextResponse.json({
       foods,
       suggestions,
-      ai_keywords: expandedKeywords,
+      expanded_from: expandedKeyword
+        ? { keyword: expandedKeyword, source: expandedSource }
+        : null,
     });
   } catch (err) {
     console.error('[foods/search] error', err);
