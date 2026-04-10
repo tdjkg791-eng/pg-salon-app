@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed-foods.ts",
+    "seed-custom": "tsx scripts/seed-foods-custom.ts",
     "import-mext": "tsx scripts/import-mext.ts"
   },
   "dependencies": {
