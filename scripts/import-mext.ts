@@ -97,6 +97,10 @@ function classify(food: {
   // 1. Explicit ng: grains (rice, bread, noodles) by group '01'
   if (group === '01') return { status: 'ng', note: '主食・糖質多め' };
 
+  // 1b. Explicit ng: 乳類 (group 13), 油脂類 (group 14) — Pg. では厳禁
+  if (group === '13') return { status: 'ng', note: '乳製品はPg.NG' };
+  if (group === '14') return { status: 'ng', note: '油脂はPg.NG' };
+
   // 2. Explicit ng: beef / salmon by name
   if (/うし|ぎゅう|牛/.test(name) && group === '11') {
     return { status: 'ng', note: '牛肉は脂質多め' };
