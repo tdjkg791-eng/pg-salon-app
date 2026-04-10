@@ -82,26 +82,30 @@ const foods: FoodSeed[] = [
 
 async function main() {
   console.log(`Seeding ${foods.length} foods...`);
-  let ok = 0;
-  let ng = 0;
 
-  for (const food of foods) {
-    const { error } = await supabase
-      .from('foods')
-      .upsert(food, { onConflict: 'name' });
+  const { error: deleteError } = await supabase
+    .from('foods')
+    .delete()
+    .eq('source', 'mext');
 
-    if (error) {
-      console.error(`  [NG] ${food.name}:`, error.message);
-      ng += 1;
-    } else {
-      console.log(`  [OK] ${food.name} (${food.pg_status})`);
-      ok += 1;
-    }
+  if (deleteError) {
+    console.error('Failed to clear existing mext foods:', deleteError.message);
+    process.exit(1);
+  }
+  console.log('Cleared existing mext foods.');
+
+  const { data, error } = await supabase.from('foods').insert(foods).select('id, name, pg_status');
+
+  if (error) {
+    console.error('Insert failed:', error.message);
+    process.exit(1);
   }
 
-  console.log(`\nDone. Success: ${ok}, Failed: ${ng}`);
+  for (const row of data ?? []) {
+    console.log(`  [OK] ${row.name} (${row.pg_status})`);
+  }
 
-  if (ng > 0) process.exit(1);
+  console.log(`\nDone. Inserted: ${data?.length ?? 0} / ${foods.length}`);
 }
 
 main().catch((err) => {

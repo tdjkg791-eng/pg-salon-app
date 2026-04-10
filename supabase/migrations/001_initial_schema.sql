@@ -1,7 +1,3 @@
--- ============================================
--- Pg. Salon App - Database Schema (9 tables)
--- ============================================
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE clients (
