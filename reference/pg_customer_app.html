@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pg. ダイエットコース</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;background:#FAFAF8;color:#2C2C2A;max-width:430px;margin:0 auto;min-height:100vh;padding-bottom:70px}
+.screen{display:none}
+.screen.active{display:block}
+.hdr{display:flex;align-items:center;padding:12px 16px;background:#fff;border-bottom:1px solid #E8E6DF;position:sticky;top:0;z-index:10}
+.hdr-back{font-size:20px;margin-right:10px;color:#888;cursor:pointer}
+.hdr-title{font-weight:600;font-size:15px;flex:1}
+.hdr-sub{font-size:12px;color:#888}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:flex;background:#fff;border-top:1px solid #E8E6DF;z-index:20}
+.nav-item{flex:1;text-align:center;padding:8px 0 6px;cursor:pointer;font-size:10px;color:#888}
+.nav-item.active{color:#1D9E75}
+.nav-icon{font-size:20px;display:block;margin-bottom:2px}
+.card{margin:10px 12px;padding:14px;background:#fff;border-radius:12px;border:1px solid #E8E6DF}
+.card-title{font-size:13px;font-weight:600;margin-bottom:10px}
+.date-bar{padding:10px 16px;font-size:12px;color:#888;font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.pfc-row{margin-bottom:8px}
+.pfc-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px}
+.pfc-label b{font-weight:600}
+.pfc-label span{color:#888}
+.pfc-track{height:6px;background:#E8E6DF;border-radius:3px;overflow:hidden}
+.pfc-fill{height:100%;border-radius:3px;transition:width .3s}
+.target-pill{margin-top:8px;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:500}
+.meal-slot{margin:0 12px 8px;padding:12px 14px;background:#fff;border-radius:12px;border:1px solid #E8E6DF;cursor:pointer}
+.meal-top{display:flex;justify-content:space-between;align-items:center}
+.meal-left{display:flex;align-items:center;gap:6px}
+.meal-icon{font-size:16px}
+.meal-name{font-weight:600;font-size:13px}
+.meal-cnt{font-size:11px;color:#888}
+.meal-p{font-size:11px;color:#888}
+.arrow{color:#ccc}
+.tags{margin-top:6px;display:flex;flex-wrap:wrap;gap:3px}
+.tag{font-size:10px;padding:2px 6px;border-radius:5px;background:#F5F4F0;color:#5F5E5A}
+.btn{display:block;margin:10px 12px;padding:13px;border-radius:12px;text-align:center;font-weight:600;font-size:14px;cursor:pointer;color:#fff;border:none;width:calc(100% - 24px)}
+.btn-primary{background:#1D9E75}
+.btn-disabled{background:#D3D1C7}
+.btn-outline{background:#fff;color:#5F5E5A;border:1px solid #D3D1C7}
+.btn-danger{background:#fff;color:#D4537E;border:1px solid #ED93B1}
+.weight-input-group{display:flex;gap:10px;margin:10px 12px}
+.weight-box{flex:1;background:#fff;border-radius:12px;border:1px solid #E8E6DF;padding:14px;text-align:center}
+.weight-box.done{border-color:#1D9E75;background:#f8fdfb}
+.weight-box label{display:block;font-size:12px;color:#888;margin-bottom:6px;font-weight:500}
+.weight-box input{width:100%;border:none;font-size:24px;font-weight:600;text-align:center;outline:none;background:transparent;color:#2C2C2A}
+.weight-box .unit{font-size:12px;color:#888;margin-top:2px}
+.menstrual-btn{margin:10px 12px;padding:12px 14px;background:#fff;border-radius:12px;border:1px solid #E8E6DF;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.menstrual-btn.active{border-color:#D4537E;background:#FDF2F6}
+.menstrual-dot{width:10px;height:10px;border-radius:50%;border:2px solid #D4537E}
+.menstrual-dot.on{background:#D4537E}
+.menstrual-msg{margin:0 12px;padding:10px 12px;border-radius:8px;background:#FDF2F6;color:#993556;font-size:12px;font-weight:500;line-height:1.5}
+.graph-area{margin:10px 12px;background:#fff;border-radius:12px;border:1px solid #E8E6DF;padding:14px;overflow-x:auto}
+.graph-area canvas{width:100%;height:200px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:8px 12px;font-size:11px;color:#888}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+.search-box{margin:10px 12px}
+.search-box input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #D3D1C7;font-size:14px;outline:none;background:#fff}
+.food-item{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;background:#fff;border-radius:10px;border:1px solid #E8E6DF;margin:0 12px 6px;cursor:pointer}
+.food-name{font-weight:500;font-size:13px;margin-bottom:2px}
+.food-pfc{font-size:10px;color:#888}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600}
+.badge-ok{background:#E1F5EE;color:#0F6E56}
+.badge-ng{background:#FCEBEB;color:#A32D2D}
+.badge-lim{background:#FAEEDA;color:#854F0B}
+.badge-body{background:#EEEDFE;color:#534AB7}
+.add-panel{margin:0 12px 10px;padding:14px;background:#fff;border-radius:12px;border:2px solid #1D9E75}
+.add-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.add-title .n{font-weight:600;font-size:14px}
+.ng-warn{padding:7px 10px;border-radius:8px;background:#FCEBEB;color:#A32D2D;font-size:11px;margin-bottom:8px;font-weight:500}
+.body-warn{padding:7px 10px;border-radius:8px;background:#EEEDFE;color:#534AB7;font-size:11px;margin-bottom:8px;font-weight:500}
+.gram-row{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.gram-row .lbl{font-size:12px;color:#888;white-space:nowrap}
+.gram-row input{flex:1;padding:9px 10px;border-radius:8px;border:1px solid #D3D1C7;font-size:16px;text-align:right;outline:none}
+.gram-row .u{font-size:13px;font-weight:500}
+.qbtns{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.qb{padding:5px 12px;border-radius:7px;font-size:11px;border:1px solid #D3D1C7;background:#fff;color:#888;cursor:pointer;font-weight:500}
+.qb.on{border-color:#1D9E75;background:#E1F5EE;color:#0F6E56}
+.calc-row{display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid #F0EEE8;border-bottom:1px solid #F0EEE8;margin-bottom:10px}
+.calc-item{text-align:center}
+.calc-item .l{font-size:10px;color:#888}
+.calc-item .v{font-size:14px;font-weight:600}
+.btn-row{display:flex;gap:6px}
+.btn-row>div{flex:1;padding:11px;border-radius:10px;text-align:center;font-size:13px;cursor:pointer}
+.btn-cancel{border:1px solid #D3D1C7;color:#888;background:#fff}
+.btn-add{font-weight:600;color:#fff}
+.entry-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#fff;border-radius:10px;border:1px solid #E8E6DF;margin:0 12px 5px}
+.entry-name{font-weight:500;font-size:12px}
+.entry-detail{font-size:10px;color:#888}
+.entry-right{display:flex;align-items:center;gap:6px}
+.entry-cal{font-size:12px;font-weight:600}
+.entry-del{color:#ccc;cursor:pointer;font-size:16px}
+.sub-label{font-size:11px;font-weight:600;color:#888;margin:8px 12px 6px}
+.meal-sub{display:flex;justify-content:space-around;padding:10px 0;margin:4px 12px 10px;background:#F5F4F0;border-radius:10px}
+.photo-btn{margin:8px 12px;padding:12px;background:#fff;border-radius:12px;border:1px dashed #D3D1C7;text-align:center;color:#888;font-size:12px;cursor:pointer}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#fff;border-radius:16px;padding:20px;max-width:300px;width:100%;text-align:center}
+.modal .check{font-size:28px;margin-bottom:10px}
+.modal .mtitle{font-weight:600;font-size:15px;margin-bottom:6px}
+.modal .mdesc{font-size:12px;color:#888;line-height:1.5;margin-bottom:14px}
+.modal .mbtn{display:inline-block;padding:9px 20px;border-radius:8px;background:#1D9E75;color:#fff;font-weight:600;font-size:13px;cursor:pointer}
+.hidden{display:none}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #F0EEE8;margin-top:4px}
+.total-row .lbl{font-size:11px;color:#888}
+.total-row .val{font-size:16px;font-weight:600}
+.weight-history{margin:0 12px}
+.wh-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border-radius:10px;border:1px solid #E8E6DF;margin-bottom:6px}
+.wh-date{font-size:12px;font-weight:500}
+.wh-vals{display:flex;gap:12px;font-size:12px;color:#888}
+.wh-vals b{color:#2C2C2A;font-weight:600}
+.wh-diff{font-size:11px;font-weight:600}
+.wh-diff.down{color:#1D9E75}
+.wh-diff.up{color:#D85A30}
+.wh-menstrual{display:inline-block;width:6px;height:6px;border-radius:50%;background:#D4537E;margin-left:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<div class="nav">
+  <div class="nav-item active" id="nav-home" onclick="go('home')"><span class="nav-icon">◉</span>ホーム</div>
+  <div class="nav-item" id="nav-meal" onclick="go('meal-home')"><span class="nav-icon">◎</span>食事</div>
+  <div class="nav-item" id="nav-weight" onclick="go('weight')"><span class="nav-icon">△</span>体重</div>
+  <div class="nav-item" id="nav-graph" onclick="go('graph')"><span class="nav-icon">▽</span>グラフ</div>
+</div>
+
+<!-- ===== HOME ===== -->
+<div class="screen active" id="s-home">
+  <div class="hdr"><div class="hdr-title">Pg. ダイエットコース</div><div class="hdr-sub">5日目 / 35日</div></div>
+  <div class="date-bar"><span>2026年4月5日（日）</span><span id="home-course-badge" style="font-size:11px;padding:3px 8px;border-radius:6px;background:#E1F5EE;color:#0F6E56;font-weight:600">5週間コース</span></div>
+
+  <!-- Today's weight summary -->
+  <div class="card">
+    <div class="card-title">今日の体重</div>
+    <div style="display:flex;justify-content:space-around;text-align:center">
+      <div><div style="font-size:11px;color:#888">朝</div><div style="font-size:20px;font-weight:600" id="home-am">--.-</div></div>
+      <div><div style="font-size:11px;color:#888">晩</div><div style="font-size:20px;font-weight:600" id="home-pm">--.-</div></div>
+      <div><div style="font-size:11px;color:#888">日内変動</div><div style="font-size:20px;font-weight:600" id="home-diff">--</div></div>
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <span style="font-size:11px;color:#888">開始 58.0kg → 目標 53.0kg　残り </span><span style="font-size:13px;font-weight:600;color:#1D9E75" id="home-remain">--</span>
+    </div>
+  </div>
+
+  <!-- PFC summary -->
+  <div class="card" id="home-pfc-card">
+    <div class="card-title">今日のPFC</div>
+    <div class="pfc-row"><div class="pfc-label"><b>タンパク質</b><span id="hp-val">0.0g / 116g</span></div><div class="pfc-track"><div class="pfc-fill" id="hp-bar" style="width:0%;background:#1D9E75"></div></div></div>
+    <div class="pfc-row"><div class="pfc-label"><b>脂質</b><span id="hf-val">0.0g</span></div><div class="pfc-track"><div class="pfc-fill" id="hf-bar" style="width:0%;background:#D85A30"></div></div></div>
+    <div class="pfc-row"><div class="pfc-label"><b>炭水化物</b><span id="hc-val">0.0g</span></div><div class="pfc-track"><div class="pfc-fill" id="hc-bar" style="width:0%;background:#378ADD"></div></div></div>
+    <div class="total-row"><span class="lbl">合計</span><span class="val" id="hcal-val">0 kcal</span></div>
+    <div class="target-pill" id="htarget" style="background:#FAEEDA;color:#854F0B">タンパク質目標 116g：0%</div>
+  </div>
+
+  <!-- Menstrual toggle -->
+  <div class="menstrual-btn" id="menstrual-toggle" onclick="toggleMenstrual()">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="menstrual-dot" id="menstrual-dot"></div>
+      <span style="font-size:13px;font-weight:500">生理中</span>
+    </div>
+    <span style="font-size:12px;color:#888" id="menstrual-status">OFF</span>
+  </div>
+  <div class="menstrual-msg hidden" id="menstrual-msg">体重が減りにくい時期です。正常な反応ですので安心してください。食事管理を継続することが大切です。</div>
+
+  <!-- Quick actions -->
+  <div style="display:flex;gap:8px;margin:10px 12px">
+    <div class="btn btn-outline" style="flex:1;margin:0;font-size:12px" onclick="go('weight')">体重を記録</div>
+    <div class="btn btn-outline" style="flex:1;margin:0;font-size:12px" onclick="go('meal-home')">食事を記録</div>
+  </div>
+</div>
+
+<!-- ===== WEIGHT INPUT ===== -->
+<div class="screen" id="s-weight">
+  <div class="hdr"><div class="hdr-back" onclick="go('home')">←</div><div class="hdr-title">体重記録</div></div>
+  <div class="date-bar">2026年4月5日（日）・5日目</div>
+
+  <div class="weight-input-group">
+    <div class="weight-box" id="wb-am">
+      <label>朝の体重</label>
+      <input type="number" step="0.1" id="w-am" placeholder="00.0" oninput="updateWeightPreview()">
+      <div class="unit">kg</div>
+    </div>
+    <div class="weight-box" id="wb-pm">
+      <label>晩の体重</label>
+      <input type="number" step="0.1" id="w-pm" placeholder="00.0" oninput="updateWeightPreview()">
+      <div class="unit">kg</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;font-size:12px">
+      <span style="color:#888">日内変動</span>
+      <span style="font-weight:600" id="w-daily-diff">--</span>
+    </div>
+    <div style="font-size:10px;color:#888;margin-top:2px">理想は800g以内</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px">
+      <span style="color:#888">前日朝との差</span>
+      <span style="font-weight:600" id="w-yesterday-diff">--</span>
+    </div>
+  </div>
+
+  <div class="btn btn-primary" onclick="saveWeight()">記録する</div>
+
+  <!-- Weight history -->
+  <div class="sub-label">最近の記録</div>
+  <div class="weight-history" id="weight-history"></div>
+</div>
+
+<!-- ===== GRAPH ===== -->
+<div class="screen" id="s-graph">
+  <div class="hdr"><div class="hdr-back" onclick="go('home')">←</div><div class="hdr-title">体重推移グラフ</div></div>
+
+  <div class="graph-area">
+    <canvas id="weight-canvas" height="200"></canvas>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>朝体重</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#85B7EB"></div>晩体重</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#D85A30"></div>施術日</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#D4537E"></div>生理期間</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">サマリー</div>
+    <div style="display:flex;justify-content:space-around;text-align:center;font-size:12px">
+      <div><div style="color:#888">開始</div><div style="font-size:16px;font-weight:600">58.0kg</div></div>
+      <div><div style="color:#888">現在</div><div style="font-size:16px;font-weight:600;color:#1D9E75" id="graph-current">--</div></div>
+      <div><div style="color:#888">減量幅</div><div style="font-size:16px;font-weight:600;color:#1D9E75" id="graph-lost">--</div></div>
+      <div><div style="color:#888">目標まで</div><div style="font-size:16px;font-weight:600" id="graph-remain">--</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MEAL HOME ===== -->
+<div class="screen" id="s-meal-home">
+  <div class="hdr"><div class="hdr-back" onclick="go('home')">←</div><div class="hdr-title">食事記録</div><div class="hdr-sub">5日目</div></div>
+
+  <div class="card" id="meal-pfc-card">
+    <div class="card-title">本日のPFC</div>
+    <div class="pfc-row"><div class="pfc-label"><b>P</b><span id="mp-val">0.0g / 116g</span></div><div class="pfc-track"><div class="pfc-fill" id="mp-bar" style="width:0%;background:#1D9E75"></div></div></div>
+    <div class="pfc-row"><div class="pfc-label"><b>F</b><span id="mf-val">0.0g</span></div><div class="pfc-track"><div class="pfc-fill" id="mf-bar" style="width:0%;background:#D85A30"></div></div></div>
+    <div class="pfc-row"><div class="pfc-label"><b>C</b><span id="mc-val">0.0g</span></div><div class="pfc-track"><div class="pfc-fill" id="mc-bar" style="width:0%;background:#378ADD"></div></div></div>
+    <div class="total-row"><span class="lbl">合計</span><span class="val" id="mcal-val">0 kcal</span></div>
+  </div>
+
+  <div class="meal-slot" onclick="openMeal('breakfast')"><div class="meal-top"><div class="meal-left"><span class="meal-icon">☀</span><span class="meal-name">朝食</span><span class="meal-cnt" id="breakfast-cnt">未記録</span></div><div style="display:flex;align-items:center;gap:8px"><span class="meal-p" id="breakfast-p"></span><span class="arrow">→</span></div></div><div class="tags" id="breakfast-tags"></div></div>
+  <div class="meal-slot" onclick="openMeal('lunch')"><div class="meal-top"><div class="meal-left"><span class="meal-icon">☼</span><span class="meal-name">昼食</span><span class="meal-cnt" id="lunch-cnt">未記録</span></div><div style="display:flex;align-items:center;gap:8px"><span class="meal-p" id="lunch-p"></span><span class="arrow">→</span></div></div><div class="tags" id="lunch-tags"></div></div>
+  <div class="meal-slot" onclick="openMeal('dinner')"><div class="meal-top"><div class="meal-left"><span class="meal-icon">☽</span><span class="meal-name">夕食</span><span class="meal-cnt" id="dinner-cnt">未記録</span></div><div style="display:flex;align-items:center;gap:8px"><span class="meal-p" id="dinner-p"></span><span class="arrow">→</span></div></div><div class="tags" id="dinner-tags"></div></div>
+  <div class="meal-slot" onclick="openMeal('snack')"><div class="meal-top"><div class="meal-left"><span class="meal-icon">♢</span><span class="meal-name">間食</span><span class="meal-cnt" id="snack-cnt">未記録</span></div><div style="display:flex;align-items:center;gap:8px"><span class="meal-p" id="snack-p"></span><span class="arrow">→</span></div></div><div class="tags" id="snack-tags"></div></div>
+
+  <div class="photo-btn">＋ 食事の写真を追加</div>
+  <div class="btn btn-primary" id="meal-submit" onclick="showComplete()" style="background:#D3D1C7">今日はこれで終わりです</div>
+</div>
+
+<!-- ===== MEAL DETAIL ===== -->
+<div class="screen" id="s-meal-detail">
+  <div class="hdr"><div class="hdr-back" onclick="go('meal-home')">←</div><div class="hdr-title" id="md-title">朝食の記録</div></div>
+  <div class="search-box"><input type="text" id="md-search" placeholder="食品名で検索（例：ささみ、ブロッコリー）" oninput="doSearch()"></div>
+  <div id="md-results"></div>
+  <div id="md-add-panel" class="hidden"></div>
+  <div id="md-entries"></div>
+</div>
+
+<!-- ===== COMPLETE OVERLAY ===== -->
+<div id="complete-overlay" class="overlay hidden" onclick="hideComplete()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="check">✓</div>
+    <div class="mtitle">報告完了</div>
+    <div class="mdesc">本日の食事記録をお店に送信しました。<br>指導コメントをお待ちください。</div>
+    <div class="mbtn" onclick="hideComplete()">閉じる</div>
+  </div>
+</div>
+
+<!-- ===== WEIGHT SAVED OVERLAY ===== -->
+<div id="weight-overlay" class="overlay hidden" onclick="hideWeightOverlay()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="check">✓</div>
+    <div class="mtitle">記録しました</div>
+    <div class="mdesc" id="weight-saved-msg"></div>
+    <div class="mbtn" onclick="hideWeightOverlay()">OK</div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+var CLIENT={name:"田中様",weight:58,target:53,bodyType:"fat_sensitive",pTarget:116};
+var FOODS=[
+  {id:1,name:"鶏ささみ",cat:"肉類",p:24.6,f:1.1,c:0,cal:109,st:"ok",fw:false,cw:false},
+  {id:2,name:"鶏むね肉（皮なし）",cat:"肉類",p:24.4,f:1.9,c:0,cal:116,st:"ok",fw:false,cw:false},
+  {id:3,name:"鶏むね肉（味付き）",cat:"肉類",p:22.0,f:2.5,c:1.2,cal:118,st:"ok",fw:false,cw:false,note:"サラダチキン等OK"},
+  {id:4,name:"豚ヒレ肉",cat:"肉類",p:22.2,f:3.7,c:0.3,cal:130,st:"ok",fw:false,cw:false},
+  {id:5,name:"牛もも肉",cat:"肉類",p:21.3,f:10.7,c:0.4,cal:191,st:"ng",fw:true,cw:false},
+  {id:6,name:"卵（全卵）",cat:"その他",p:12.2,f:10.2,c:0.4,cal:142,st:"limited",note:"1日3個まで",fw:true,cw:false},
+  {id:7,name:"ブロッコリー",cat:"野菜",p:5.4,f:0.6,c:6.6,cal:37,st:"ok",fw:false,cw:false},
+  {id:8,name:"サーモン（生）",cat:"魚類",p:20.1,f:16.1,c:0.1,cal:233,st:"ng",fw:true,cw:false},
+  {id:9,name:"鮭の切身",cat:"魚類",p:22.3,f:4.1,c:0.1,cal:133,st:"limited",note:"1日一切れまで",fw:true,cw:false},
+  {id:10,name:"マグロ赤身",cat:"魚類",p:26.4,f:1.4,c:0.1,cal:125,st:"ok",fw:false,cw:false},
+  {id:11,name:"白米ごはん",cat:"穀類",p:2.5,f:0.3,c:37.1,cal:156,st:"ng",fw:false,cw:true},
+  {id:12,name:"もやし",cat:"野菜",p:1.7,f:0.1,c:2.6,cal:15,st:"ok",fw:false,cw:false},
+  {id:13,name:"えび",cat:"魚類",p:21.6,f:0.6,c:0.1,cal:97,st:"ok",fw:false,cw:false},
+  {id:14,name:"タラ",cat:"魚類",p:17.6,f:0.2,c:0.1,cal:77,st:"ok",fw:false,cw:false},
+  {id:15,name:"砂肝",cat:"肉類",p:18.3,f:1.8,c:0,cal:94,st:"ok",fw:false,cw:false},
+  {id:16,name:"こんにゃく",cat:"その他",p:0.1,f:0,c:3.3,cal:7,st:"ok",fw:false,cw:false},
+];
+
+var entries={breakfast:[],lunch:[],dinner:[],snack:[]};
+var curMeal=null,curFood=null;
+var isMenstrual=false;
+var weightData=[
+  {day:1,date:"4/1",am:58.0,pm:58.6,menstrual:false,treatment:false},
+  {day:2,date:"4/2",am:57.6,pm:58.1,menstrual:false,treatment:true},
+  {day:3,date:"4/3",am:57.2,pm:57.8,menstrual:true,treatment:false},
+  {day:4,date:"4/4",am:57.3,pm:57.7,menstrual:true,treatment:false},
+];
+var todayWeight={am:null,pm:null};
+
+var ICONS={breakfast:"☀",lunch:"☼",dinner:"☽",snack:"♢"};
+var NAMES={breakfast:"朝食",lunch:"昼食",dinner:"夕食",snack:"間食"};
+
+// ===== NAVIGATION =====
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById('s-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+  var navMap={home:'nav-home','meal-home':'nav-meal','meal-detail':'nav-meal',weight:'nav-weight',graph:'nav-graph'};
+  var navEl=document.getElementById(navMap[id]);
+  if(navEl)navEl.classList.add('active');
+  if(id==='home')updateHome();
+  if(id==='meal-home')updateMealHome();
+  if(id==='weight')updateWeightScreen();
+  if(id==='graph')drawGraph();
+}
+
+// ===== HOME =====
+function updateHome(){
+  if(todayWeight.am!==null){document.getElementById('home-am').textContent=todayWeight.am.toFixed(1)}
+  if(todayWeight.pm!==null){document.getElementById('home-pm').textContent=todayWeight.pm.toFixed(1)}
+  if(todayWeight.am!==null&&todayWeight.pm!==null){
+    var d=(todayWeight.pm-todayWeight.am).toFixed(1);
+    document.getElementById('home-diff').textContent=(d>0?"+":"")+d;
+    document.getElementById('home-diff').style.color=d>0?"#D85A30":"#1D9E75";
+  }
+  var cur=todayWeight.am||weightData[weightData.length-1].am;
+  document.getElementById('home-remain').textContent=(cur-CLIENT.target).toFixed(1)+"kg";
+
+  var all=entries.breakfast.concat(entries.lunch,entries.dinner,entries.snack);
+  var tp=0,tf=0,tc=0,tcal=0;
+  all.forEach(function(e){tp+=e.p;tf+=e.f;tc+=e.c;tcal+=e.cal});
+  var pPct=Math.min(100,Math.round(tp/CLIENT.pTarget*100));
+  document.getElementById('hp-val').textContent=tp.toFixed(1)+"g / "+CLIENT.pTarget+"g";
+  document.getElementById('hf-val').textContent=tf.toFixed(1)+"g";
+  document.getElementById('hc-val').textContent=tc.toFixed(1)+"g";
+  document.getElementById('hp-bar').style.width=pPct+"%";
+  document.getElementById('hf-bar').style.width=Math.min(100,tf/50*100)+"%";
+  document.getElementById('hc-bar').style.width=Math.min(100,tc/50*100)+"%";
+  document.getElementById('hcal-val').textContent=Math.round(tcal)+" kcal";
+  var tb=document.getElementById('htarget');
+  tb.textContent="タンパク質目標 "+CLIENT.pTarget+"g："+pPct+"%";
+  if(pPct>=80){tb.style.background="#E1F5EE";tb.style.color="#0F6E56"}
+  else{tb.style.background="#FAEEDA";tb.style.color="#854F0B"}
+}
+
+function toggleMenstrual(){
+  isMenstrual=!isMenstrual;
+  var btn=document.getElementById('menstrual-toggle');
+  var dot=document.getElementById('menstrual-dot');
+  var msg=document.getElementById('menstrual-msg');
+  var st=document.getElementById('menstrual-status');
+  if(isMenstrual){btn.classList.add('active');dot.classList.add('on');msg.classList.remove('hidden');st.textContent="ON"}
+  else{btn.classList.remove('active');dot.classList.remove('on');msg.classList.add('hidden');st.textContent="OFF"}
+}
+
+// ===== WEIGHT =====
+function updateWeightScreen(){
+  var el=document.getElementById('weight-history');
+  var html="";
+  for(var i=weightData.length-1;i>=0;i--){
+    var w=weightData[i];
+    var diff=i>0?(w.am-weightData[i-1].am).toFixed(1):"-";
+    var cls=diff>0?"up":"down";
+    html+='<div class="wh-item"><div><div class="wh-date">'+w.date+'（'+w.day+'日目）'+(w.menstrual?'<span class="wh-menstrual"></span>':'')+(w.treatment?' <span style="font-size:10px;color:#D85A30">施術</span>':'')+'</div></div><div class="wh-vals">朝 <b>'+w.am.toFixed(1)+'</b> 晩 <b>'+w.pm.toFixed(1)+'</b></div>'+(i>0?'<div class="wh-diff '+cls+'">'+(diff>0?"+":"")+diff+'</div>':'')+'</div>';
+  }
+  el.innerHTML=html;
+}
+
+function updateWeightPreview(){
+  var am=parseFloat(document.getElementById('w-am').value);
+  var pm=parseFloat(document.getElementById('w-pm').value);
+  if(am)document.getElementById('wb-am').classList.add('done');else document.getElementById('wb-am').classList.remove('done');
+  if(pm)document.getElementById('wb-pm').classList.add('done');else document.getElementById('wb-pm').classList.remove('done');
+  var diffEl=document.getElementById('w-daily-diff');
+  if(am&&pm){
+    var d=pm-am;
+    var dAbs=Math.abs(d);
+    var dStr=(d>0?"+":"")+d.toFixed(1)+"kg";
+    var judgement="";
+    var color="#1D9E75";
+    if(dAbs<=0.8){judgement=" ✓ 理想的";color="#1D9E75"}
+    else if(dAbs<=1.2){judgement=" やや多め";color="#854F0B"}
+    else{judgement=" ⚠ 水分・塩分過多の可能性";color="#A32D2D"}
+    diffEl.innerHTML=dStr+'<span style="font-size:11px;margin-left:6px;color:'+color+'">'+judgement+'</span>';
+    diffEl.style.color=color;
+  }
+  if(am&&weightData.length>0){
+    var yd=(am-weightData[weightData.length-1].am).toFixed(1);
+    document.getElementById('w-yesterday-diff').textContent=(yd>0?"+":"")+yd+"kg";
+    document.getElementById('w-yesterday-diff').style.color=yd>0?"#D85A30":"#1D9E75";
+  }
+}
+
+function saveWeight(){
+  var am=parseFloat(document.getElementById('w-am').value);
+  var pm=parseFloat(document.getElementById('w-pm').value);
+  if(!am&&!pm)return;
+  if(am)todayWeight.am=am;
+  if(pm)todayWeight.pm=pm;
+  var msg="";
+  if(am)msg+="朝 "+am.toFixed(1)+"kg";
+  if(am&&pm)msg+=" / ";
+  if(pm)msg+="晩 "+pm.toFixed(1)+"kg";
+  document.getElementById('weight-saved-msg').textContent=msg+" を記録しました。";
+  document.getElementById('weight-overlay').classList.remove('hidden');
+}
+
+function hideWeightOverlay(){document.getElementById('weight-overlay').classList.add('hidden')}
+
+// ===== GRAPH =====
+function drawGraph(){
+  var canvas=document.getElementById('weight-canvas');
+  var ctx=canvas.getContext('2d');
+  var W=canvas.parentElement.clientWidth-28;
+  canvas.width=W;canvas.height=200;
+  ctx.clearRect(0,0,W,200);
+  var data=weightData.slice();
+  if(todayWeight.am)data.push({day:5,date:"4/5",am:todayWeight.am,pm:todayWeight.pm||todayWeight.am,menstrual:isMenstrual,treatment:false});
+  if(data.length<2)return;
+  var allVals=[];data.forEach(function(d){allVals.push(d.am);allVals.push(d.pm)});
+  var mn=Math.min.apply(null,allVals)-0.5;
+  var mx=Math.max.apply(null,allVals)+0.5;
+  var pad={t:20,b:30,l:35,r:15};
+  var gw=W-pad.l-pad.r;
+  var gh=200-pad.t-pad.b;
+  function x(i){return pad.l+i/(data.length-1)*gw}
+  function y(v){return pad.t+(1-(v-mn)/(mx-mn))*gh}
+
+  // Grid
+  ctx.strokeStyle="#E8E6DF";ctx.lineWidth=0.5;
+  for(var v=Math.ceil(mn);v<=Math.floor(mx);v++){
+    ctx.beginPath();ctx.moveTo(pad.l,y(v));ctx.lineTo(W-pad.r,y(v));ctx.stroke();
+    ctx.fillStyle="#888";ctx.font="10px sans-serif";ctx.textAlign="right";
+    ctx.fillText(v+"kg",pad.l-4,y(v)+3);
+  }
+
+  // Menstrual background
+  data.forEach(function(d,i){
+    if(d.menstrual){
+      ctx.fillStyle="rgba(212,83,126,0.08)";
+      var x1=i>0?x(i)-gw/data.length/2:pad.l;
+      var x2=i<data.length-1?x(i)+gw/data.length/2:W-pad.r;
+      ctx.fillRect(x1,pad.t,x2-x1,gh);
+    }
+  });
+
+  // PM line
+  ctx.beginPath();ctx.strokeStyle="#85B7EB";ctx.lineWidth=1.5;
+  data.forEach(function(d,i){i===0?ctx.moveTo(x(i),y(d.pm)):ctx.lineTo(x(i),y(d.pm))});
+  ctx.stroke();
+
+  // AM line
+  ctx.beginPath();ctx.strokeStyle="#1D9E75";ctx.lineWidth=2;
+  data.forEach(function(d,i){i===0?ctx.moveTo(x(i),y(d.am)):ctx.lineTo(x(i),y(d.am))});
+  ctx.stroke();
+
+  // Points & labels
+  data.forEach(function(d,i){
+    // AM dot
+    ctx.beginPath();ctx.arc(x(i),y(d.am),3,0,Math.PI*2);ctx.fillStyle="#1D9E75";ctx.fill();
+    // PM dot
+    ctx.beginPath();ctx.arc(x(i),y(d.pm),2.5,0,Math.PI*2);ctx.fillStyle="#85B7EB";ctx.fill();
+    // Treatment marker
+    if(d.treatment){
+      ctx.beginPath();ctx.arc(x(i),y(d.am)-10,4,0,Math.PI*2);ctx.fillStyle="#D85A30";ctx.fill();
+      ctx.fillStyle="#fff";ctx.font="bold 6px sans-serif";ctx.textAlign="center";
+      ctx.fillText("T",x(i),y(d.am)-8);
+    }
+    // Date label
+    ctx.fillStyle="#888";ctx.font="10px sans-serif";ctx.textAlign="center";
+    ctx.fillText(d.date,x(i),200-pad.b+14);
+  });
+
+  // Summary
+  var latest=data[data.length-1].am;
+  document.getElementById('graph-current').textContent=latest.toFixed(1)+"kg";
+  document.getElementById('graph-lost').textContent="-"+(58-latest).toFixed(1)+"kg";
+  document.getElementById('graph-remain').textContent=(latest-CLIENT.target).toFixed(1)+"kg";
+}
+
+// ===== MEAL =====
+function updateMealHome(){
+  var all=entries.breakfast.concat(entries.lunch,entries.dinner,entries.snack);
+  var tp=0,tf=0,tc=0,tcal=0;
+  all.forEach(function(e){tp+=e.p;tf+=e.f;tc+=e.c;tcal+=e.cal});
+  var pPct=Math.min(100,Math.round(tp/CLIENT.pTarget*100));
+  document.getElementById('mp-val').textContent=tp.toFixed(1)+"g / "+CLIENT.pTarget+"g";
+  document.getElementById('mf-val').textContent=tf.toFixed(1)+"g";
+  document.getElementById('mc-val').textContent=tc.toFixed(1)+"g";
+  document.getElementById('mp-bar').style.width=pPct+"%";
+  document.getElementById('mf-bar').style.width=Math.min(100,tf/50*100)+"%";
+  document.getElementById('mc-bar').style.width=Math.min(100,tc/50*100)+"%";
+  document.getElementById('mcal-val').textContent=Math.round(tcal)+" kcal";
+  document.getElementById('meal-submit').style.background=all.length>0?"#1D9E75":"#D3D1C7";
+
+  ["breakfast","lunch","dinner","snack"].forEach(function(k){
+    var a=entries[k],cnt=document.getElementById(k+"-cnt"),ptxt=document.getElementById(k+"-p"),tags=document.getElementById(k+"-tags");
+    if(a.length>0){
+      cnt.textContent=a.length+"品";
+      var mp=0;a.forEach(function(e){mp+=e.p});
+      ptxt.textContent="P"+mp.toFixed(1)+"g";
+      tags.innerHTML=a.map(function(e){return'<span class="tag">'+e.name+" "+e.g+"g</span>"}).join("");
+    }else{cnt.textContent="未記録";ptxt.textContent="";tags.innerHTML=""}
+  });
+}
+
+function openMeal(k){
+  curMeal=k;curFood=null;
+  document.getElementById('md-title').textContent=ICONS[k]+" "+NAMES[k]+"の記録";
+  document.getElementById('md-search').value="";
+  document.getElementById('md-results').innerHTML="";
+  document.getElementById('md-add-panel').classList.add('hidden');
+  renderEntries();
+  go('meal-detail');
+}
+
+function doSearch(){
+  var q=document.getElementById('md-search').value;
+  var el=document.getElementById('md-results');
+  if(curFood)return;
+  if(!q){el.innerHTML="";return}
+  var res=FOODS.filter(function(f){return f.name.indexOf(q)>=0||f.cat.indexOf(q)>=0});
+  el.innerHTML=res.map(function(f){
+    var bc=f.st==="ok"?"badge-ok":f.st==="ng"?"badge-ng":"badge-lim";
+    var bl=f.st==="ok"?"OK":f.st==="ng"?"NG":"注意";
+    if(f.note)bl+=" "+f.note;
+    var bodyWarn="";
+    if(CLIENT.bodyType==="fat_sensitive"&&f.fw)bodyWarn='<span class="badge badge-body">体質NG</span> ';
+    if(CLIENT.bodyType==="carb_sensitive"&&f.cw)bodyWarn='<span class="badge badge-body">体質NG</span> ';
+    return'<div class="food-item" onclick="selectFood('+f.id+')"><div><div class="food-name">'+f.name+'</div><div class="food-pfc">P'+f.p+'g F'+f.f+'g C'+f.c+'g /100g</div></div><div>'+bodyWarn+'<span class="badge '+bc+'">'+bl+'</span></div></div>';
+  }).join("");
+}
+
+function selectFood(id){
+  curFood=FOODS.find(function(f){return f.id===id});
+  document.getElementById('md-results').innerHTML="";
+  renderAddPanel(100);
+}
+
+function renderAddPanel(g){
+  var f=curFood;if(!f){document.getElementById('md-add-panel').classList.add('hidden');return}
+  var r=g/100;
+  var bc=f.st==="ok"?"badge-ok":f.st==="ng"?"badge-ng":"badge-lim";
+  var bl=f.st==="ok"?"OK":f.st==="ng"?"NG":"注意";if(f.note)bl+=" "+f.note;
+  var warn=f.st==="ng"?'<div class="ng-warn">この食品はPg.プログラムでNGです。カラダの変化が止まる原因になります。</div>':"";
+  var bodyWarn="";
+  if(CLIENT.bodyType==="fat_sensitive"&&f.fw)bodyWarn='<div class="body-warn">この食品はあなたの体質（脂質太りタイプ）には特にNGです。</div>';
+  if(CLIENT.bodyType==="carb_sensitive"&&f.cw)bodyWarn='<div class="body-warn">この食品はあなたの体質（炭水化物太りタイプ）には特にNGです。</div>';
+  var qbs=[50,80,100,150,200].map(function(v){return'<div class="qb'+(g===v?" on":"")+'" onclick="setG('+v+')">'+v+"g</div>"}).join("");
+  var canAdd=f.st!=="ng";
+  var btnBg=canAdd?"#1D9E75":"#D3D1C7";
+  var btnClick=canAdd?'onclick="addFood('+g+')"':"";
+
+  document.getElementById('md-add-panel').innerHTML=
+    '<div class="add-title"><div class="n">'+f.name+'</div><span class="badge '+bc+'">'+bl+'</span></div>'+
+    warn+bodyWarn+
+    '<div class="gram-row"><span class="lbl">食べた量</span><input type="number" id="g-input" value="'+g+'" onchange="setG(parseInt(this.value)||100)"><span class="u">g</span></div>'+
+    '<div class="qbtns">'+qbs+'</div>'+
+    '<div class="calc-row">'+
+    '<div class="calc-item"><div class="l">P</div><div class="v" style="color:#1D9E75">'+(f.p*r).toFixed(1)+'g</div></div>'+
+    '<div class="calc-item"><div class="l">F</div><div class="v" style="color:#D85A30">'+(f.f*r).toFixed(1)+'g</div></div>'+
+    '<div class="calc-item"><div class="l">C</div><div class="v" style="color:#378ADD">'+(f.c*r).toFixed(1)+'g</div></div>'+
+    '<div class="calc-item"><div class="l">kcal</div><div class="v">'+Math.round(f.cal*r)+'</div></div>'+
+    '</div>'+
+    '<div class="btn-row"><div class="btn-cancel" onclick="cancelAdd()">キャンセル</div><div class="btn-add" style="background:'+btnBg+'" '+btnClick+'>登録</div></div>';
+  document.getElementById('md-add-panel').classList.remove('hidden');
+}
+
+function setG(g){renderAddPanel(g)}
+
+function addFood(g){
+  var f=curFood;if(!f||!curMeal)return;
+  var r=g/100;
+  entries[curMeal].push({id:Date.now(),name:f.name,g:g,p:Math.round(f.p*r*10)/10,f:Math.round(f.f*r*10)/10,c:Math.round(f.c*r*10)/10,cal:Math.round(f.cal*r)});
+  curFood=null;
+  document.getElementById('md-add-panel').classList.add('hidden');
+  document.getElementById('md-search').value="";
+  renderEntries();
+}
+
+function cancelAdd(){curFood=null;document.getElementById('md-add-panel').classList.add('hidden');document.getElementById('md-search').value=""}
+
+function removeEntry(id){entries[curMeal]=entries[curMeal].filter(function(e){return e.id!==id});renderEntries()}
+
+function renderEntries(){
+  var a=entries[curMeal]||[];var el=document.getElementById('md-entries');
+  if(!a.length){el.innerHTML="";return}
+  var mp=0,mf=0,mc=0;a.forEach(function(e){mp+=e.p;mf+=e.f;mc+=e.c});
+  el.innerHTML='<div class="sub-label">登録済み</div>'+
+    a.map(function(e){return'<div class="entry-item"><div><div class="entry-name">'+e.name+'</div><div class="entry-detail">'+e.g+'g / P'+e.p+'g F'+e.f+'g C'+e.c+'g</div></div><div class="entry-right"><span class="entry-cal">'+e.cal+'kcal</span><span class="entry-del" onclick="removeEntry('+e.id+')">×</span></div></div>'}).join("")+
+    '<div class="meal-sub"><div class="calc-item"><div class="l">P</div><div class="v" style="color:#1D9E75">'+mp.toFixed(1)+'g</div></div><div class="calc-item"><div class="l">F</div><div class="v" style="color:#D85A30">'+mf.toFixed(1)+'g</div></div><div class="calc-item"><div class="l">C</div><div class="v" style="color:#378ADD">'+mc.toFixed(1)+'g</div></div></div>';
+}
+
+function showComplete(){
+  var all=entries.breakfast.concat(entries.lunch,entries.dinner,entries.snack);
+  if(!all.length)return;
+  document.getElementById('complete-overlay').classList.remove('hidden');
+}
+function hideComplete(){document.getElementById('complete-overlay').classList.add('hidden')}
+
+// ===== INIT =====
+updateHome();
+</script>
+</body>
+</html>
