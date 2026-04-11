@@ -29,6 +29,17 @@ const MAX_SUGGESTIONS = 15;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 
+// Explicit column list. select('*') triggers a PostgREST/planner edge case on
+// production where the combo (select=*, or filter, order=pg_status, limit=20)
+// returns 0 rows for some narrow matches (e.g. "ナポリタン") even though
+// every variation with one element removed returns the row correctly. Listing
+// columns explicitly sidesteps the issue and is what every caller actually
+// uses anyway.
+const FOOD_COLUMNS =
+  'id,food_code,name,name_kana,category,serving_g,calories_kcal,' +
+  'protein_g,fat_g,carb_g,pg_status,pg_note,fat_warning,carb_warning,' +
+  'source,serving_units,common_use,created_at';
+
 function escapePattern(s: string): string {
   // PostgREST or-filter treats , and % specially in LIKE patterns.
   // Also strip () and other characters that can break the or() grammar.
@@ -79,7 +90,7 @@ async function queryByKeyword(
 
   let query = supabase
     .from('foods')
-    .select('*')
+    .select(FOOD_COLUMNS)
     .or(conditions.join(','))
     .order('pg_status', { ascending: true })
     .limit(limit);
@@ -98,7 +109,7 @@ async function queryByCategory(
 ): Promise<Food[]> {
   const { data, error } = await supabase
     .from('foods')
-    .select('*')
+    .select(FOOD_COLUMNS)
     .eq('category', category)
     .order('pg_status', { ascending: true })
     .limit(limit);
