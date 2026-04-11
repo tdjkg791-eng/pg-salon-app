@@ -43,6 +43,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       const rawFull = await supabase.from('foods').select('*').or(or4)
         .order('pg_status', { ascending: true }).limit(20);
 
+      // bisection
+      const rawA = await supabase.from('foods').select('*').or(or4); // *
+      const rawB = await supabase.from('foods').select('id,name').or(or4)
+        .order('pg_status', { ascending: true }); // order only
+      const rawC = await supabase.from('foods').select('id,name').or(or4).limit(20); // limit only
+      const rawD = await supabase.from('foods').select('id,name').or(or4)
+        .order('pg_status', { ascending: true }).limit(20); // order + limit (no *)
+
       return NextResponse.json({
         ...result,
         _debug: {
@@ -58,6 +66,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
           full_count: rawFull.data?.length ?? 0,
           full_err: rawFull.error?.message ?? null,
           full_names: (rawFull.data ?? []).slice(0, 3).map((r: any) => r.name),
+          A_starOnly: { c: rawA.data?.length ?? 0, e: rawA.error?.message ?? null },
+          B_orderOnly: { c: rawB.data?.length ?? 0, e: rawB.error?.message ?? null },
+          C_limitOnly: { c: rawC.data?.length ?? 0, e: rawC.error?.message ?? null },
+          D_orderLimit: { c: rawD.data?.length ?? 0, e: rawD.error?.message ?? null },
           searchFoods_foods: result.foods.length,
           searchFoods_first: result.foods.slice(0, 3).map((f: any) => f.name),
           node: process.version,
