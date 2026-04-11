@@ -28,24 +28,38 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     const result = await searchFoods(supabase, q, { category, limit });
 
     if (debug) {
-      // Debug probe — independent raw queries to compare against searchFoods output
       const variants = expandQueryVariants(q);
-      const raw1 = await supabase.from('foods').select('id,name')
-        .or(`name.ilike.%${q}%,name_kana.ilike.%${q}%`);
-      const raw2 = await supabase.from('foods').select('id,name').ilike('name', `%${q}%`);
-      const raw3 = await supabase.from('foods').select('id,name').ilike('name_kana', `%${q}%`);
+
+      // 2-condition OR (just q itself, both columns)
+      const or2 = `name.ilike.%${q}%,name_kana.ilike.%${q}%`;
+      const raw2c = await supabase.from('foods').select('id,name').or(or2);
+
+      // 4-condition OR (both variants, both columns) — like queryByKeyword
+      const cond4 = variants.flatMap((v) => [`name.ilike.%${v}%`, `name_kana.ilike.%${v}%`]);
+      const or4 = cond4.join(',');
+      const raw4c = await supabase.from('foods').select('id,name').or(or4);
+
+      // 4-cond + select('*') + order + limit (EXACT replica of queryByKeyword)
+      const rawFull = await supabase.from('foods').select('*').or(or4)
+        .order('pg_status', { ascending: true }).limit(20);
+
       return NextResponse.json({
         ...result,
         _debug: {
           q,
           q_codepoints: Array.from(q).map((c) => c.codePointAt(0)?.toString(16)),
           variants,
-          variants_codepoints: variants.map((v) => Array.from(v).map((c) => c.codePointAt(0)?.toString(16))),
-          raw_or_count: raw1.data?.length ?? 0,
-          raw_or_error: raw1.error?.message ?? null,
-          raw_or_names: (raw1.data ?? []).slice(0, 3).map((r: any) => r.name),
-          raw_name_only_count: raw2.data?.length ?? 0,
-          raw_name_kana_only_count: raw3.data?.length ?? 0,
+          or2_clause: or2,
+          or2_count: raw2c.data?.length ?? 0,
+          or2_err: raw2c.error?.message ?? null,
+          or4_clause: or4,
+          or4_count: raw4c.data?.length ?? 0,
+          or4_err: raw4c.error?.message ?? null,
+          full_count: rawFull.data?.length ?? 0,
+          full_err: rawFull.error?.message ?? null,
+          full_names: (rawFull.data ?? []).slice(0, 3).map((r: any) => r.name),
+          searchFoods_foods: result.foods.length,
+          searchFoods_first: result.foods.slice(0, 3).map((f: any) => f.name),
           node: process.version,
         },
       });
