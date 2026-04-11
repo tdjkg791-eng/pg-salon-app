@@ -116,8 +116,12 @@ const TEST_CASES: TestCase[] = [
 
   // ── 料理名 (ホームレシピ — bare dish names, no chain prefix) ──
   { cat: '料理-単体', input: 'ナポリタン', keywords: ['ナポリタン'], min: 1, desc: '社長報告: 0件だったバグの回帰テスト' },
+  { cat: '料理-単体', input: 'カルボナーラ', keywords: ['カルボナーラ'], min: 1, desc: 'PostgREST edge case回帰テスト' },
+  { cat: '料理-単体', input: 'ペペロンチーノ', keywords: ['ペペロンチーノ'], min: 1, desc: 'PostgREST edge case回帰テスト' },
+  { cat: '料理-単体', input: 'ボロネーゼ', keywords: ['ボロネーゼ'], min: 1, desc: 'PostgREST edge case回帰テスト' },
+  { cat: '料理-単体', input: 'ミートソース', keywords: ['ミートソース'], min: 1, desc: 'PostgREST edge case回帰テスト' },
+  { cat: '料理-単体', input: 'ハンバーグ', keywords: ['ハンバーグ'], min: 5, desc: 'PostgREST edge case回帰テスト(複数店舗)' },
   { cat: '料理-単体', input: '親子丼', keywords: ['親子丼'], min: 1 },
-  { cat: '料理-単体', input: 'カルボナーラ', keywords: ['カルボナーラ'], min: 1 },
   { cat: '料理-単体', input: 'オムライス', keywords: ['オムライス'], min: 1 },
   { cat: '料理-単体', input: '焼きそば', keywords: ['焼きそば'], min: 1 },
   { cat: '料理-単体', input: '鯖の塩焼き', keywords: ['鯖の塩焼き'], min: 1 },
