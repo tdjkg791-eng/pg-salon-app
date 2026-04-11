@@ -32,8 +32,32 @@ async function trace(q: string) {
 }
 
 async function main() {
-  for (const q of ['ナポリタン', 'なぽりたん', 'カルボナーラ', 'ハンバーグ', 'ペペロンチーノ', 'ボロネーゼ', 'ミートソース']) {
-    await trace(q);
+  // Focus on just ナポリタン for debugging
+  await trace('ナポリタン');
+
+  // Additional debugging for variants
+  const q = 'ナポリタン';
+  console.log(`\n========= Variant Analysis for "${q}" =========`);
+  const variants = expandQueryVariants(q);
+  console.log('Raw variants:', JSON.stringify(variants));
+
+  function escapePattern(s: string): string {
+    return s.replace(/[%,()]/g, ' ').trim();
   }
+
+  const escaped = variants.map(escapePattern).filter(v => v.length > 0);
+  console.log('Escaped variants:', JSON.stringify(escaped));
+
+  const conditions: string[] = [];
+  const seen = new Set<string>();
+  for (const v of escaped) {
+    if (seen.has(v)) continue;
+    seen.add(v);
+    const pattern = `%${v}%`;
+    conditions.push(`name.ilike.${pattern}`);
+    conditions.push(`name_kana.ilike.${pattern}`);
+  }
+  console.log('Final conditions count:', conditions.length);
+  console.log('OR clause:', conditions.join(','));
 }
 main().catch(e => { console.error(e); process.exit(1); });

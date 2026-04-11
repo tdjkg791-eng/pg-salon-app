@@ -6,6 +6,8 @@
  *   1. Direct substring match with kana-variant OR against name / name_kana
  *   2. If < MIN_DIRECT_HITS: expand query via synonym dictionary and re-query
  *   3. If still 0: fall back to category hint
+ *
+ * Fixed: PostgREST select(*) + OR + order + limit edge case (ナポリタン bug)
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSynonyms, getCategoryHint } from '@/lib/utils/food-synonyms';
