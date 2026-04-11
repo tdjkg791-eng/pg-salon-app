@@ -11,6 +11,7 @@
     "seed-custom": "tsx scripts/seed-foods-custom.ts",
     "seed-restaurants": "tsx scripts/seed-foods-restaurants.ts",
     "test-search": "tsx scripts/test-search-quality.ts",
+    "seed-serving-units": "tsx scripts/seed-serving-units.ts",
     "import-mext": "tsx scripts/import-mext.ts"
   },
   "dependencies": {

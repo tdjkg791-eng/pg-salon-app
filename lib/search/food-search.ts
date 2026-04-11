@@ -35,6 +35,23 @@ function escapePattern(s: string): string {
   return s.replace(/[%,()]/g, ' ').trim();
 }
 
+/**
+ * Stable sort: foods with non-empty serving_units come first. Order within
+ * each group is preserved (which means the DB-level pg_status ordering is
+ * kept inside each bucket).
+ */
+function rankBySeringUnits<T extends Record<string, any>>(rows: T[]): T[] {
+  const hasUnits = (r: T): boolean => {
+    const v = r.serving_units;
+    return Array.isArray(v) && v.length > 0;
+  };
+  return [...rows].sort((a, b) => {
+    const aHas = hasUnits(a) ? 0 : 1;
+    const bHas = hasUnits(b) ? 0 : 1;
+    return aHas - bHas;
+  });
+}
+
 async function queryByKeyword(
   supabase: SupabaseClient,
   keyword: string,
@@ -139,7 +156,7 @@ export async function searchFoods(
       : await queryByKeyword(supabase, q, category, limit);
 
   if (foods.length >= MIN_DIRECT_HITS) {
-    return { foods, suggestions: [], expanded_from: null };
+    return { foods: rankBySeringUnits(foods), suggestions: [], expanded_from: null };
   }
 
   const seen = new Set(foods.map((f) => f.id));
@@ -193,8 +210,8 @@ export async function searchFoods(
   }
 
   return {
-    foods,
-    suggestions,
+    foods: rankBySeringUnits(foods),
+    suggestions: rankBySeringUnits(suggestions),
     expanded_from: expandedKeyword
       ? { keyword: expandedKeyword, source: expandedSource! }
       : null,

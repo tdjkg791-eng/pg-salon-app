@@ -61,6 +61,12 @@ export interface WeightLog {
   created_at: string;
 }
 
+export interface ServingUnit {
+  label: string;       // e.g. "M玉1個", "茶碗1杯", "1パック"
+  grams: number;       // grams per unit
+  default?: boolean;   // true for the preset that should be selected first
+}
+
 export interface Food {
   id: string;
   name: string;
@@ -75,6 +81,8 @@ export interface Food {
   pg_note: string | null;
   fat_sensitive_ok: boolean;
   carb_sensitive_ok: boolean;
+  serving_units: ServingUnit[];
+  common_use: string | null;
   created_at: string;
   updated_at: string;
 }
