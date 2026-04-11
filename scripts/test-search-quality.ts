@@ -114,6 +114,23 @@ const TEST_CASES: TestCase[] = [
   { cat: 'カテゴリ', input: '果物', min: 3 },
   { cat: 'カテゴリ', input: '飲料', min: 3 },
 
+  // ── 料理名 (ホームレシピ — bare dish names, no chain prefix) ──
+  { cat: '料理-単体', input: 'ナポリタン', keywords: ['ナポリタン'], min: 1, desc: '社長報告: 0件だったバグの回帰テスト' },
+  { cat: '料理-単体', input: '親子丼', keywords: ['親子丼'], min: 1 },
+  { cat: '料理-単体', input: 'カルボナーラ', keywords: ['カルボナーラ'], min: 1 },
+  { cat: '料理-単体', input: 'オムライス', keywords: ['オムライス'], min: 1 },
+  { cat: '料理-単体', input: '焼きそば', keywords: ['焼きそば'], min: 1 },
+  { cat: '料理-単体', input: '鯖の塩焼き', keywords: ['鯖の塩焼き'], min: 1 },
+  { cat: '料理-単体', input: 'さばの塩焼き', keywords: ['塩焼き'], min: 1, desc: 'ひらがな表記ゆれ' },
+  { cat: '料理-単体', input: '唐揚げ', keywords: ['唐揚げ'], min: 1 },
+  { cat: '料理-単体', input: 'ハンバーグ', keywords: ['ハンバーグ'], min: 1 },
+  { cat: '料理-単体', input: 'カレーライス', keywords: ['カレーライス'], min: 1 },
+  { cat: '料理-単体', input: 'ラーメン', keywords: ['ラーメン'], min: 1 },
+  { cat: '料理-単体', input: 'お好み焼き', keywords: ['お好み焼き'], min: 1 },
+  { cat: '料理-単体', input: 'たこ焼き', keywords: ['たこ焼き'], min: 1 },
+  { cat: '料理-単体', input: '麻婆豆腐', keywords: ['麻婆豆腐'], min: 1 },
+  { cat: '料理-単体', input: '餃子', keywords: ['餃子'], min: 1 },
+
   // ── 料理名 ──
   { cat: '料理', input: '牛丼', keywords: ['牛丼'], min: 5 },
   { cat: '料理', input: 'カレー', keywords: ['カレー'], min: 3 },
